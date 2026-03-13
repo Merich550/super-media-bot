@@ -57,19 +57,19 @@ Kerakli tugmani tanlang 👇
     await message.answer(text, reply_markup=menu)
 
 # =========================
-# TIKTOK
+# TIKTOK TUGMA
 # =========================
 
 @dp.message_handler(lambda message: message.text == "📥 TikTok")
-async def tiktok(message: types.Message):
+async def tiktok_button(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
 # =========================
-# INSTAGRAM
+# INSTAGRAM TUGMA
 # =========================
 
 @dp.message_handler(lambda message: message.text == "📥 Instagram")
-async def instagram(message: types.Message):
+async def instagram_button(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
 # =========================
@@ -115,8 +115,10 @@ async def downloader(message: types.Message):
 kino_mode = {}
 
 @dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
-async def kino(message: types.Message):
+async def kino_start(message: types.Message):
+
     kino_mode[message.from_user.id] = True
+
     await message.answer("🎬 Kino nomini yozing")
 
 @dp.message_handler()
@@ -138,8 +140,10 @@ ai_mode = {}
 
 @dp.message_handler(lambda message: message.text == "🤖 AI Chat")
 async def ai_start(message: types.Message):
+
     ai_mode[message.from_user.id] = True
-    await message.answer("🤖 Savolingizni yozing")
+
+    await message.answer("🤖 AI Chat yoqildi.\nSavolingizni yozing.")
 
 @dp.message_handler()
 async def ai_chat(message: types.Message):
@@ -151,8 +155,17 @@ async def ai_chat(message: types.Message):
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "user", "content": message.text}
-                ]
+                    {
+                        "role": "system",
+                        "content": "Sen aqlli AI yordamchisan. O'zbek tilida aniq va tushunarli javob ber."
+                    },
+                    {
+                        "role": "user",
+                        "content": message.text
+                    }
+                ],
+                max_tokens=800,
+                temperature=0.7
             )
 
             reply = response.choices[0].message.content
