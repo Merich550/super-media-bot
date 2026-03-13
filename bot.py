@@ -25,47 +25,53 @@ Buyruqlar:
 
 
 @dp.message_handler(commands=["tiktok"])
-async def tiktok_cmd(message: types.Message):
+async def tiktok(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
 
 @dp.message_handler(commands=["youtube"])
-async def youtube_cmd(message: types.Message):
+async def youtube(message: types.Message):
     await message.answer("📥 YouTube link yuboring")
 
 
 @dp.message_handler(commands=["instagram"])
-async def instagram_cmd(message: types.Message):
+async def instagram(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
 
-@dp.message_handler(lambda message: message.text and (
-        "tiktok.com" in message.text or
-        "youtube.com" in message.text or
-        "youtu.be" in message.text or
-        "instagram.com" in message.text))
-async def download_video(message: types.Message):
+@dp.message_handler()
+async def downloader(message: types.Message):
 
     url = message.text
+
+    if not any(x in url for x in ["tiktok.com","youtube.com","youtu.be","instagram.com"]):
+        return
+
     await message.answer("⏳ Video yuklanmoqda...")
 
-ydl_opts = {
-    'outtmpl': 'video.%(ext)s',
-    'format': 'best',
-    'noplaylist': True
-}
-    
+    ydl_opts = {
+        "outtmpl": "video.%(ext)s",
+        "format": "best",
+        "noplaylist": True
+    }
 
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
 
+        file = None
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        for f in os.listdir():
+            if f.startswith("video"):
+                file = f
+                break
 
-    for file in os.listdir():
-        if file.startswith("video"):
+        if file:
             await message.answer_video(open(file, "rb"))
             os.remove(file)
-            break
+
+    except:
+        await message.answer("❌ Video yuklab bo‘lmadi")
 
 
 if __name__ == "__main__":
