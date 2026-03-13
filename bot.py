@@ -10,7 +10,7 @@ from aiogram.utils import executor
 # TOKENLAR
 # =========================
 
-TOKEN = "8705691968:AAGPoBPIpPc3JTJd6NZ-diKI0kE3eV7SZKQ"
+TOKEN = "8705691968:AAGic9DPOmHUinqRgVVC_u6QizMVUg6EbtM"
 OPENAI_API_KEY = "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"
 
 openai.api_key = OPENAI_API_KEY
