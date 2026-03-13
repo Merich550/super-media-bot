@@ -14,30 +14,12 @@ async def start(message: types.Message):
     text = """
 🤖 Super Media Bot
 
-🎬 /kino - Kino qidirish
-🎬 /kod - Kino kodi
-🎵 /music - Musiqa topish
-📥 /tiktok - TikTok video yuklash
-📥 /instagram - Instagram video yuklash
-📥 /youtube - YouTube video yuklash
-🤖 /ai - AI chat
-📞 /help - Yordam
-"""
-    await message.answer(text)
+📥 TikTok / YouTube / Instagram video yuklaydi
 
-
-@dp.message_handler(commands=["help"])
-async def help_cmd(message: types.Message):
-    text = """
-📞 Yordam menyusi
-
-/kino - Kino qidirish
-/kod - Kino kodi
-/music - Musiqa topish
-/tiktok - TikTok video yuklash
-/instagram - Instagram video yuklash
-/youtube - YouTube video yuklash
-/ai - AI chat
+Buyruqlar:
+/tiktok
+/youtube
+/instagram
 """
     await message.answer(text)
 
@@ -47,25 +29,39 @@ async def tiktok_cmd(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
 
-@dp.message_handler()
+@dp.message_handler(commands=["youtube"])
+async def youtube_cmd(message: types.Message):
+    await message.answer("📥 YouTube link yuboring")
+
+
+@dp.message_handler(commands=["instagram"])
+async def instagram_cmd(message: types.Message):
+    await message.answer("📥 Instagram link yuboring")
+
+
+@dp.message_handler(lambda message: message.text and (
+        "tiktok.com" in message.text or
+        "youtube.com" in message.text or
+        "youtu.be" in message.text or
+        "instagram.com" in message.text))
 async def download_video(message: types.Message):
+
     url = message.text
 
-    if "tiktok.com" in url:
-        await message.answer("⏳ Video yuklanmoqda...")
+    await message.answer("⏳ Video yuklanmoqda...")
 
-        ydl_opts = {
-            'outtmpl': 'video.%(ext)s'
-        }
+    ydl_opts = {
+        'outtmpl': 'video.%(ext)s'
+    }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
 
-        for file in os.listdir():
-            if file.startswith("video"):
-                await message.answer_video(open(file, "rb"))
-                os.remove(file)
-                break
+    for file in os.listdir():
+        if file.startswith("video"):
+            await message.answer_video(open(file, "rb"))
+        os.remove(file)
+            break
 
 
 if __name__ == "__main__":
