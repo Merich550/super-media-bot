@@ -15,33 +15,39 @@ menu.add(
     KeyboardButton("📥 TikTok"),
     KeyboardButton("📥 Instagram")
 )
+menu.add(
+    KeyboardButton("🔎 Kino qidirish")
+)
 
 # START
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
     await message.answer(
-        "📥 Video yuklash uchun tugmani tanlang:",
+        "🤖 Super Media Bot\n\n"
+        "Tugmani tanlang 👇",
         reply_markup=menu
     )
 
-# TIKTOK BUTTON
+# TIKTOK
 @dp.message_handler(lambda message: message.text == "📥 TikTok")
 async def tiktok(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
-# INSTAGRAM BUTTON
+# INSTAGRAM
 @dp.message_handler(lambda message: message.text == "📥 Instagram")
 async def instagram(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
-# DOWNLOAD
-@dp.message_handler()
+# KINO SEARCH BUTTON
+@dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
+async def kino(message: types.Message):
+    await message.answer("🎬 Kino nomini yozing")
+
+# VIDEO DOWNLOAD
+@dp.message_handler(lambda message: "tiktok.com" in message.text or "instagram.com" in message.text)
 async def downloader(message: types.Message):
 
     url = message.text
-
-    if not any(x in url for x in ["tiktok.com","instagram.com"]):
-        return
 
     await message.answer("⏳ Video yuklanmoqda...")
 
@@ -68,6 +74,21 @@ async def downloader(message: types.Message):
 
     except:
         await message.answer("❌ Video yuklab bo‘lmadi")
+
+# KINO SEARCH
+@dp.message_handler()
+async def kino_search(message: types.Message):
+
+    if message.text.startswith("📥") or message.text.startswith("🔎"):
+        return
+
+    movie = message.text
+
+    search_url = f"https://www.google.com/search?q={movie}+kino"
+
+    await message.answer(
+        f"🔎 Kino qidiruv natijasi:\n{search_url}"
+    )
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
