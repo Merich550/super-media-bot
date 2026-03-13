@@ -4,7 +4,7 @@ from aiogram.utils import executor
 import yt_dlp
 import os
 
-TOKEN = "8705691968:AAFsg3UVE1YRWQl7RlIhRP7v-R_Een7kBYw"
+TOKEN = "8705691968:AAGPoBPIpPc3JTJd6NZ-diKI0kE3eV7SZKQ"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
@@ -16,7 +16,8 @@ menu.add(
     KeyboardButton("📥 YouTube")
 )
 menu.add(
-    KeyboardButton("📥 Instagram")
+    KeyboardButton("📥 Instagram"),
+    KeyboardButton("🎵 MP3")
 )
 
 # START
@@ -24,7 +25,12 @@ menu.add(
 async def start(message: types.Message):
     await message.answer(
         "🤖 Super Media Bot\n\n"
-        "Video yuklash uchun tugmani tanlang:",
+        "Bot nimalar qila oladi?\n"
+        "📥 TikTok video yuklash\n"
+        "📥 Instagram video yuklash\n"
+        "📥 YouTube video yuklash\n"
+        "🎵 YouTube MP3 yuklash\n\n"
+        "Pastdagi tugmani tanlang 👇",
         reply_markup=menu
     )
 
@@ -41,6 +47,9 @@ async def youtube(message: types.Message):
 async def instagram(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
+@dp.message_handler(lambda message: message.text == "🎵 MP3")
+async def mp3(message: types.Message):
+    await message.answer("🎵 YouTube link yuboring")
 
 # DOWNLOAD
 @dp.message_handler()
@@ -51,10 +60,10 @@ async def downloader(message: types.Message):
     if not any(x in url for x in ["tiktok.com","youtube.com","youtu.be","instagram.com"]):
         return
 
-    await message.answer("⏳ Video yuklanmoqda...")
+    await message.answer("⏳ Yuklanmoqda...")
 
     ydl_opts = {
-        "outtmpl": "video.%(ext)s",
+        "outtmpl": "media.%(ext)s",
         "format": "best",
         "noplaylist": True
     }
@@ -63,20 +72,23 @@ async def downloader(message: types.Message):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        video_file = None
+        file_name = None
 
         for file in os.listdir():
-            if file.startswith("video"):
-                video_file = file
+            if file.startswith("media"):
+                file_name = file
                 break
 
-        if video_file:
-            await message.answer_video(open(video_file, "rb"))
-            os.remove(video_file)
+        if file_name:
+            if "mp3" in file_name or "m4a" in file_name:
+                await message.answer_audio(open(file_name, "rb"))
+            else:
+                await message.answer_video(open(file_name, "rb"))
+
+            os.remove(file_name)
 
     except:
-        await message.answer("❌ Video yuklab bo‘lmadi")
-
+        await message.answer("❌ Yuklab bo‘lmadi")
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
