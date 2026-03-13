@@ -7,8 +7,9 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
 
 # =========================
-# TOKENS
+# TOKENLAR
 # =========================
+
 TOKEN = "8705691968:AAGPoBPIpPc3JTJd6NZ-diKI0kE3eV7SZKQ"
 OPENAI_API_KEY = "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"
 
@@ -20,11 +21,14 @@ dp = Dispatcher(bot)
 # =========================
 # MENU
 # =========================
+
 menu = ReplyKeyboardMarkup(resize_keyboard=True)
+
 menu.add(
     KeyboardButton("📥 TikTok"),
     KeyboardButton("📥 Instagram")
 )
+
 menu.add(
     KeyboardButton("🔎 Kino qidirish"),
     KeyboardButton("🤖 AI Chat")
@@ -33,105 +37,134 @@ menu.add(
 # =========================
 # START
 # =========================
+
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
-    await message.answer(
-        "🤖 Super Media Bot\n\n"
-        "Kerakli tugmani tanlang 👇",
-        reply_markup=menu
-    )
+
+    text = """
+🚀 Super Media Bot
+
+Bu bot nima qila oladi?
+
+📥 TikTok video yuklash
+📥 Instagram video yuklash
+🔎 Kino qidirish
+🤖 AI Chat
+
+Kerakli tugmani tanlang 👇
+"""
+
+    await message.answer(text, reply_markup=menu)
 
 # =========================
-# BUTTON HANDLERS
+# TIKTOK
 # =========================
-@dp.message_handler(lambda m: m.text == "📥 TikTok")
-async def ask_tiktok(message: types.Message):
+
+@dp.message_handler(lambda message: message.text == "📥 TikTok")
+async def tiktok(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
-@dp.message_handler(lambda m: m.text == "📥 Instagram")
-async def ask_instagram(message: types.Message):
+# =========================
+# INSTAGRAM
+# =========================
+
+@dp.message_handler(lambda message: message.text == "📥 Instagram")
+async def instagram(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
-@dp.message_handler(lambda m: m.text == "🔎 Kino qidirish")
-async def ask_movie(message: types.Message):
-    await message.answer("🎬 Kino nomini yozing")
-
-@dp.message_handler(lambda m: m.text == "🤖 AI Chat")
-async def ask_ai(message: types.Message):
-    await message.answer("🤖 Savolingizni yozing")
-
 # =========================
-# VIDEO DOWNLOAD
+# VIDEO YUKLASH
 # =========================
-@dp.message_handler(lambda m: ("tiktok.com" in m.text) or ("instagram.com" in m.text))
-async def download_video(message: types.Message):
-    url = message.text.strip()
+
+@dp.message_handler(lambda message: "tiktok.com" in message.text or "instagram.com" in message.text)
+async def downloader(message: types.Message):
+
+    url = message.text
+
     await message.answer("⏳ Video yuklanmoqda...")
 
     ydl_opts = {
         "outtmpl": "video.%(ext)s",
         "format": "best",
-        "noplaylist": True,
-        "quiet": True
+        "noplaylist": True
     }
 
     try:
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
         video_file = None
-        for f in os.listdir():
-            if f.startswith("video"):
-                video_file = f
+
+        for file in os.listdir():
+            if file.startswith("video"):
+                video_file = file
                 break
 
         if video_file:
-            with open(video_file, "rb") as vf:
-                await message.answer_video(vf)
+            await message.answer_video(open(video_file, "rb"))
             os.remove(video_file)
-        else:
-            await message.answer("❌ Video topilmadi")
 
-    except Exception as e:
+    except:
         await message.answer("❌ Video yuklab bo‘lmadi")
 
 # =========================
-# KINO SEARCH
+# KINO QIDIRISH
 # =========================
+
+kino_mode = {}
+
+@dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
+async def kino(message: types.Message):
+    kino_mode[message.from_user.id] = True
+    await message.answer("🎬 Kino nomini yozing")
+
 @dp.message_handler()
-async def movie_or_ai(message: types.Message):
-    text = message.text.strip()
+async def kino_search(message: types.Message):
 
-    # Tugmalar matnini o'tkazib yuboramiz
-    if text in ["📥 TikTok", "📥 Instagram", "🔎 Kino qidirish", "🤖 AI Chat"]:
-        return
+    if kino_mode.get(message.from_user.id):
 
-    # Agar link bo'lmasa -> kino qidiruv
-    if not ("tiktok.com" in text or "instagram.com" in text):
-        # Agar foydalanuvchi oldin "🔎 Kino qidirish" ni bosgan bo‘lsa
-        if "kino" not in text.lower():
-            search_url = f"https://www.google.com/search?q={text}+kino"
-            await message.answer(f"🔎 Kino qidiruv natijasi:\n{search_url}")
-            return
+        kino_mode[message.from_user.id] = False
 
-    # =========================
-    # AI CHAT
-    # =========================
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": text}],
-            max_tokens=300
-        )
+        link = f"https://www.google.com/search?q={message.text}+kino"
 
-        answer = response.choices[0].message.content.strip()
-        await message.answer(answer)
-
-    except Exception:
-        await message.answer("❌ AI javob bera olmadi")
+        await message.answer(f"🔎 Kino qidiruv natijasi:\n{link}")
 
 # =========================
-# RUN BOT
+# AI CHAT
 # =========================
+
+ai_mode = {}
+
+@dp.message_handler(lambda message: message.text == "🤖 AI Chat")
+async def ai_start(message: types.Message):
+    ai_mode[message.from_user.id] = True
+    await message.answer("🤖 Savolingizni yozing")
+
+@dp.message_handler()
+async def ai_chat(message: types.Message):
+
+    if ai_mode.get(message.from_user.id):
+
+        try:
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "user", "content": message.text}
+                ]
+            )
+
+            reply = response.choices[0].message.content
+
+            await message.answer(reply)
+
+        except:
+            await message.answer("❌ AI javob bera olmadi")
+
+# =========================
+# BOTNI ISHGA TUSHIRISH
+# =========================
+
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
