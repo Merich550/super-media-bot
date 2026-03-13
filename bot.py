@@ -49,10 +49,14 @@ async def download_video(message: types.Message):
     url = message.text
     await message.answer("⏳ Video yuklanmoqda...")
 
-    ydl_opts = {
-        'outtmpl': 'video.%(ext)s',
-        'format': 'mp4'
-    }
+ydl_opts = {
+    'outtmpl': 'video.%(ext)s',
+    'format': 'best',
+    'noplaylist': True
+}
+    
+
+
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
