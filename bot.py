@@ -19,6 +19,14 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 # =========================
+# HOLATLAR
+# =========================
+
+music_mode = {}
+kino_mode = {}
+ai_mode = {}
+
+# =========================
 # MENU
 # =========================
 
@@ -30,7 +38,11 @@ menu.add(
 )
 
 menu.add(
-    KeyboardButton("🔎 Kino qidirish"),
+    KeyboardButton("🎵 Musiqa"),
+    KeyboardButton("🔎 Kino qidirish")
+)
+
+menu.add(
     KeyboardButton("🤖 AI Chat")
 )
 
@@ -44,10 +56,11 @@ async def start(message: types.Message):
     text = """
 🚀 Super Media Bot
 
-Bu bot nima qila oladi?
+Bot nima qila oladi:
 
 📥 TikTok video yuklash
 📥 Instagram video yuklash
+🎵 Musiqa topish
 🔎 Kino qidirish
 🤖 AI Chat
 
@@ -57,7 +70,7 @@ Kerakli tugmani tanlang 👇
     await message.answer(text, reply_markup=menu)
 
 # =========================
-# TIKTOK TUGMA
+# TIKTOK
 # =========================
 
 @dp.message_handler(lambda message: message.text == "📥 TikTok")
@@ -65,7 +78,7 @@ async def tiktok_button(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
 # =========================
-# INSTAGRAM TUGMA
+# INSTAGRAM
 # =========================
 
 @dp.message_handler(lambda message: message.text == "📥 Instagram")
@@ -109,10 +122,19 @@ async def downloader(message: types.Message):
         await message.answer("❌ Video yuklab bo‘lmadi")
 
 # =========================
-# KINO QIDIRISH
+# MUSIQA
 # =========================
 
-kino_mode = {}
+@dp.message_handler(lambda message: message.text == "🎵 Musiqa")
+async def music_start(message: types.Message):
+
+    music_mode[message.from_user.id] = True
+
+    await message.answer("🎵 Musiqa nomi yoki ijrochini yozing")
+
+# =========================
+# KINO
+# =========================
 
 @dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
 async def kino_start(message: types.Message):
@@ -121,51 +143,84 @@ async def kino_start(message: types.Message):
 
     await message.answer("🎬 Kino nomini yozing")
 
-@dp.message_handler()
-async def kino_search(message: types.Message):
-
-    if kino_mode.get(message.from_user.id):
-
-        kino_mode[message.from_user.id] = False
-
-        link = f"https://www.google.com/search?q={message.text}+kino"
-
-        await message.answer(f"🔎 Kino qidiruv natijasi:\n{link}")
-
 # =========================
 # AI CHAT
 # =========================
-
-ai_mode = {}
 
 @dp.message_handler(lambda message: message.text == "🤖 AI Chat")
 async def ai_start(message: types.Message):
 
     ai_mode[message.from_user.id] = True
 
-    await message.answer("🤖 AI Chat yoqildi.\nSavolingizni yozing.")
+    await message.answer("🤖 AI Chat yoqildi. Savolingizni yozing.")
+
+# =========================
+# ASOSIY JAVOB HANDLER
+# =========================
 
 @dp.message_handler()
-async def ai_chat(message: types.Message):
+async def handler(message: types.Message):
 
-    if ai_mode.get(message.from_user.id):
+    user_id = message.from_user.id
+    text = message.text
+
+# ---------- MUSIQA ----------
+
+    if music_mode.get(user_id):
+
+        music_mode[user_id] = False
+
+        await message.answer("⏳ Musiqa qidirilmoqda...")
+
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": "music.%(ext)s",
+            "noplaylist": True,
+            "default_search": "ytsearch",
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }]
+        }
+
+        try:
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([text])
+
+            file = "music.mp3"
+
+            await message.answer_audio(open(file, "rb"))
+
+            os.remove(file)
+
+        except:
+            await message.answer("❌ Musiqa topilmadi")
+
+# ---------- KINO ----------
+
+    elif kino_mode.get(user_id):
+
+        kino_mode[user_id] = False
+
+        link = f"https://www.google.com/search?q={text}+kino"
+
+        await message.answer(f"🔎 Kino qidiruv natijasi:\n{link}")
+
+# ---------- AI CHAT ----------
+
+    elif ai_mode.get(user_id):
 
         try:
 
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "Sen aqlli AI yordamchisan. O'zbek tilida aniq va tushunarli javob ber."
-                    },
-                    {
-                        "role": "user",
-                        "content": message.text
-                    }
+                    {"role": "system", "content": "Sen aqlli yordamchi botsan. O'zbek tilida javob ber."},
+                    {"role": "user", "content": text}
                 ],
-                max_tokens=800,
-                temperature=0.7
+                max_tokens=800
             )
 
             reply = response.choices[0].message.content
