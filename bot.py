@@ -47,11 +47,11 @@ async def instagram_cmd(message: types.Message):
 async def download_video(message: types.Message):
 
     url = message.text
-
     await message.answer("⏳ Video yuklanmoqda...")
 
     ydl_opts = {
-        'outtmpl': 'video.%(ext)s'
+        'outtmpl': 'video.%(ext)s',
+        'format': 'mp4'
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -60,7 +60,7 @@ async def download_video(message: types.Message):
     for file in os.listdir():
         if file.startswith("video"):
             await message.answer_video(open(file, "rb"))
-        os.remove(file)
+            os.remove(file)
             break
 
 
