@@ -1,60 +1,78 @@
+import os
+import yt_dlp
+import openai
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
-import yt_dlp
-import os
 
+# =========================
+# TOKENS
+# =========================
 TOKEN = "8705691968:AAGPoBPIpPc3JTJd6NZ-diKI0kE3eV7SZKQ"
+OPENAI_API_KEY = "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"
+
+openai.api_key = OPENAI_API_KEY
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
+# =========================
 # MENU
+# =========================
 menu = ReplyKeyboardMarkup(resize_keyboard=True)
 menu.add(
     KeyboardButton("📥 TikTok"),
     KeyboardButton("📥 Instagram")
 )
 menu.add(
-    KeyboardButton("🔎 Kino qidirish")
+    KeyboardButton("🔎 Kino qidirish"),
+    KeyboardButton("🤖 AI Chat")
 )
 
+# =========================
 # START
+# =========================
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
     await message.answer(
         "🤖 Super Media Bot\n\n"
-        "Tugmani tanlang 👇",
+        "Kerakli tugmani tanlang 👇",
         reply_markup=menu
     )
 
-# TIKTOK
-@dp.message_handler(lambda message: message.text == "📥 TikTok")
-async def tiktok(message: types.Message):
+# =========================
+# BUTTON HANDLERS
+# =========================
+@dp.message_handler(lambda m: m.text == "📥 TikTok")
+async def ask_tiktok(message: types.Message):
     await message.answer("📥 TikTok link yuboring")
 
-# INSTAGRAM
-@dp.message_handler(lambda message: message.text == "📥 Instagram")
-async def instagram(message: types.Message):
+@dp.message_handler(lambda m: m.text == "📥 Instagram")
+async def ask_instagram(message: types.Message):
     await message.answer("📥 Instagram link yuboring")
 
-# KINO SEARCH BUTTON
-@dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
-async def kino(message: types.Message):
+@dp.message_handler(lambda m: m.text == "🔎 Kino qidirish")
+async def ask_movie(message: types.Message):
     await message.answer("🎬 Kino nomini yozing")
 
+@dp.message_handler(lambda m: m.text == "🤖 AI Chat")
+async def ask_ai(message: types.Message):
+    await message.answer("🤖 Savolingizni yozing")
+
+# =========================
 # VIDEO DOWNLOAD
-@dp.message_handler(lambda message: "tiktok.com" in message.text or "instagram.com" in message.text)
-async def downloader(message: types.Message):
-
-    url = message.text
-
+# =========================
+@dp.message_handler(lambda m: ("tiktok.com" in m.text) or ("instagram.com" in m.text))
+async def download_video(message: types.Message):
+    url = message.text.strip()
     await message.answer("⏳ Video yuklanmoqda...")
 
     ydl_opts = {
         "outtmpl": "video.%(ext)s",
         "format": "best",
-        "noplaylist": True
+        "noplaylist": True,
+        "quiet": True
     }
 
     try:
@@ -62,33 +80,58 @@ async def downloader(message: types.Message):
             ydl.download([url])
 
         video_file = None
-
-        for file in os.listdir():
-            if file.startswith("video"):
-                video_file = file
+        for f in os.listdir():
+            if f.startswith("video"):
+                video_file = f
                 break
 
         if video_file:
-            await message.answer_video(open(video_file, "rb"))
+            with open(video_file, "rb") as vf:
+                await message.answer_video(vf)
             os.remove(video_file)
+        else:
+            await message.answer("❌ Video topilmadi")
 
-    except:
+    except Exception as e:
         await message.answer("❌ Video yuklab bo‘lmadi")
 
+# =========================
 # KINO SEARCH
+# =========================
 @dp.message_handler()
-async def kino_search(message: types.Message):
+async def movie_or_ai(message: types.Message):
+    text = message.text.strip()
 
-    if message.text.startswith("📥") or message.text.startswith("🔎"):
+    # Tugmalar matnini o'tkazib yuboramiz
+    if text in ["📥 TikTok", "📥 Instagram", "🔎 Kino qidirish", "🤖 AI Chat"]:
         return
 
-    movie = message.text
+    # Agar link bo'lmasa -> kino qidiruv
+    if not ("tiktok.com" in text or "instagram.com" in text):
+        # Agar foydalanuvchi oldin "🔎 Kino qidirish" ni bosgan bo‘lsa
+        if "kino" not in text.lower():
+            search_url = f"https://www.google.com/search?q={text}+kino"
+            await message.answer(f"🔎 Kino qidiruv natijasi:\n{search_url}")
+            return
 
-    search_url = f"https://www.google.com/search?q={movie}+kino"
+    # =========================
+    # AI CHAT
+    # =========================
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": text}],
+            max_tokens=300
+        )
 
-    await message.answer(
-        f"🔎 Kino qidiruv natijasi:\n{search_url}"
-    )
+        answer = response.choices[0].message.content.strip()
+        await message.answer(answer)
 
+    except Exception:
+        await message.answer("❌ AI javob bera olmadi")
+
+# =========================
+# RUN BOT
+# =========================
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
