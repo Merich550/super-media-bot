@@ -1,14 +1,13 @@
-import asyncio
 from aiogram import Bot, Dispatcher, types
+from aiogram.utils import executor
 
 TOKEN = "8705691968:AAFsg3UVE1YRWQl7RlIhRP7v-R_Een7kBYw"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
-@dp.message(commands=["start"])
-async def start(msg: types.Message):
-
+@dp.message_handler(commands=["start"])
+async def start(message: types.Message):
     text = """
 🤖 Super Media Bot
 
@@ -21,10 +20,7 @@ async def start(msg: types.Message):
 🤖 /ai - AI chat
 📞 /help - Yordam
 """
+    await message.answer(text)
 
-    await msg.answer(text)
-
-async def main():
-    await dp.start_polling(bot)
-
-asyncio.run(main())
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
