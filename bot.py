@@ -1,10 +1,10 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
 
-TOKEN = "8705691968:AAEwu84UKRH6LtGCo6lhf7TkTv2_Gj7tsmo"
+TOKEN = "8705691968:AAFsg3UVE1YRWQl7RlIhRP7v-R_Een7kBYw"
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot)
 
 @dp.message(commands=["start"])
 async def start(msg: types.Message):
