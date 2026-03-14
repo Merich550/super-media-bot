@@ -101,7 +101,8 @@ async def music_btn(message: types.Message):
 
 
 # Musiqa qidirish
-@dp.message_handler(lambda m: m.text and not m.text.startswith("/"))
+
+@dp.message_handler(lambda m: m.text not in ["📥 TikTok","📥 Instagram","▶️ YouTube","🎵 Musiqa","🎬 Kino","☀️ Ob-havo"] and not "http" in m.text)
 async def music_search(message: types.Message):
 
     try:
@@ -123,7 +124,28 @@ async def music_search(message: types.Message):
         await message.answer_audio(audio)
 
     except:
-        pass
+        await message.answer("Musiqa topilmadi")
+
+    
+
+        
+        
+
+        
+
+        
+            
+            
+        
+
+        
+            
+
+        
+        
+
+    
+    
 
 
 # Kino
