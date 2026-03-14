@@ -9,7 +9,7 @@ dp = Dispatcher(bot)
 
 mode = {}
 
-# KEYBOARD
+# ---------- KEYBOARD ----------
 keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard.add(
     KeyboardButton("📥 TikTok"),
@@ -20,16 +20,13 @@ keyboard.add(
     KeyboardButton("🎬 Kino qidirish")
 )
 
-# START
-@dp.message_handler(commands=['start'])
+# ---------- START ----------
+@dp.message_handler(commands=["start"])
 async def start(message: types.Message):
-    await message.answer(
-        "🚀 SUPER MEDIA BOT\n\nTanlang:",
-        reply_markup=keyboard
-    )
+    await message.answer("🤖 SUPER MEDIA BOT\nTanlang:", reply_markup=keyboard)
 
-# -------- TIKTOK --------
 
+# ---------- TIKTOK ----------
 @dp.message_handler(lambda m: m.text == "📥 TikTok")
 async def tiktok_mode(message: types.Message):
     mode[message.from_user.id] = "tiktok"
@@ -43,17 +40,19 @@ async def tiktok_download(message: types.Message):
 
     url = message.text
 
-    ydl_opts = {'outtmpl': 'tiktok.mp4'}
+    ydl_opts = {
+        'outtmpl': 'tiktok.mp4'
+    }
 
     await message.answer("⏳ Video yuklanmoqda...")
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    await message.answer_video(open("tiktok.mp4","rb"))
+    await message.answer_video(open("tiktok.mp4", "rb"))
 
-# -------- INSTAGRAM --------
 
+# ---------- INSTAGRAM ----------
 @dp.message_handler(lambda m: m.text == "📥 Instagram")
 async def insta_mode(message: types.Message):
     mode[message.from_user.id] = "instagram"
@@ -67,17 +66,19 @@ async def insta_download(message: types.Message):
 
     url = message.text
 
-    ydl_opts = {'outtmpl': 'insta.mp4'}
+    ydl_opts = {
+        'outtmpl': 'insta.mp4'
+    }
 
     await message.answer("⏳ Video yuklanmoqda...")
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    await message.answer_video(open("insta.mp4","rb"))
+    await message.answer_video(open("insta.mp4", "rb"))
 
-# -------- MUSIC --------
 
+# ---------- MUSIQA ----------
 @dp.message_handler(lambda m: m.text == "🎵 Musiqa")
 async def music_mode(message: types.Message):
     mode[message.from_user.id] = "music"
@@ -85,9 +86,6 @@ async def music_mode(message: types.Message):
 
 @dp.message_handler(lambda m: mode.get(m.from_user.id) == "music")
 async def music_download(message: types.Message):
-
-    if mode.get(message.from_user.id) != "music":
-        return
 
     query = message.text
 
@@ -101,10 +99,10 @@ async def music_download(message: types.Message):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(f"ytsearch:{query}", download=True)['entries'][0]
 
-    await message.answer_audio(open("music.webm","rb"))
+    await message.answer_audio(open("music.webm", "rb"))
 
-# -------- KINO --------
 
+# ---------- KINO ----------
 @dp.message_handler(lambda m: m.text == "🎬 Kino qidirish")
 async def kino_mode(message: types.Message):
     mode[message.from_user.id] = "kino"
@@ -113,16 +111,12 @@ async def kino_mode(message: types.Message):
 @dp.message_handler(lambda m: mode.get(m.from_user.id) == "kino")
 async def kino_search(message: types.Message):
 
-    if mode.get(message.from_user.id) != "kino":
-        return
-
     q = message.text
-
     link = f"https://www.youtube.com/results?search_query={q}+kino"
 
-await message.answer("🎬 Kino topildi:\n" + link)
+    await message.answer("🎬 Kino topildi:\n" + link)
 
+
+# ---------- RUN ----------
 if __name__ == "__main__":
     executor.start_polling(dp)
- 
-    
