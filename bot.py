@@ -1,6 +1,5 @@
 import os
 import yt_dlp
-import requests
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils import executor
@@ -16,33 +15,48 @@ keyboard.add(KeyboardButton("🎵 Musiqa"), KeyboardButton("🔎 Kino qidirish")
 
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
-    await message.answer("Super Media Bot ga xush kelibsiz", reply_markup=keyboard)
+    text = """Super Media Bot
 
+🎬 Kino qidirish
+🎵 Musiqa topish
+📥 TikTok / Instagram yuklash
+"""
+    await message.answer(text, reply_markup=keyboard)
+
+# TikTok tugma
 @dp.message_handler(lambda message: message.text == "📥 TikTok")
 async def tiktok(message: types.Message):
     await message.answer("TikTok link yuboring")
 
+# TikTok video yuklash
 @dp.message_handler(lambda message: "tiktok.com" in message.text)
 async def download_tiktok(message: types.Message):
     url = message.text
-    ydl_opts = {"format": "mp4"}
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info)
 
-    with open(filename, "rb") as video:
+    ydl_opts = {
+        "format": "mp4",
+        "outtmpl": "video.%(ext)s"
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    with open("video.mp4", "rb") as video:
         await message.answer_video(video)
 
+# Instagram
 @dp.message_handler(lambda message: message.text == "📥 Instagram")
 async def instagram(message: types.Message):
     await message.answer("Instagram link yuboring")
 
+# Musiqa
 @dp.message_handler(lambda message: message.text == "🎵 Musiqa")
 async def music(message: types.Message):
     await message.answer("Musiqa nomini yozing")
 
+# Kino
 @dp.message_handler(lambda message: message.text == "🔎 Kino qidirish")
 async def kino(message: types.Message):
-    await message.answer("Kino nomini yozing")
+    await message.answer("Qaysi kinoni qidiryapsiz?")
 
 executor.start_polling(dp)
