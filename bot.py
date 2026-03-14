@@ -1,100 +1,148 @@
 import os
+import logging
 import yt_dlp
 import requests
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiogram.utils import executor
+from aiogram import Bot, Dispatcher, executor, types
+from youtubesearchpython import VideosSearch
 
-TOKEN = "8705691968:AAHuPJ78OrUxz8dQ2LPi6Oge7zVg7YDFTUM"
+logging.basicConfig(level=logging.INFO)
+
+TOKEN = os.getenv("TOKEN")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
-keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-keyboard.add(KeyboardButton("📥 TikTok"), KeyboardButton("📥 Instagram"))
-keyboard.add(KeyboardButton("▶️ YouTube"), KeyboardButton("🎵 Musiqa"))
-keyboard.add(KeyboardButton("🎬 Kino"), KeyboardButton("🌤 Ob-havo"))
+keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+keyboard.add("📥 TikTok","📥 Instagram")
+keyboard.add("▶️ YouTube","🎵 Musiqa")
+keyboard.add("🎬 Kino","☀️ Ob-havo")
+
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    await message.answer("Super Media Bot", reply_markup=keyboard)
+    await message.answer("🤖 Super Media Bot", reply_markup=keyboard)
 
-# TikTok
+
+# TikTok tugma
 @dp.message_handler(lambda m: m.text == "📥 TikTok")
-async def tiktok(message: types.Message):
+async def tiktok_btn(message: types.Message):
     await message.answer("TikTok link yuboring")
 
-@dp.message_handler(lambda m: "tiktok.com" in m.text)
+
+# TikTok yuklash
+@dp.message_handler(lambda m: m.text and "tiktok.com" in m.text)
 async def tiktok_download(message: types.Message):
+
     url = message.text
-    ydl_opts = {"outtmpl": "tiktok.mp4"}
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-
-    video = open("tiktok.mp4", "rb")
-    await message.answer_video(video)
-
-# Instagram
-@dp.message_handler(lambda m: m.text == "📥 Instagram")
-async def insta(message: types.Message):
-    await message.answer("Instagram link yuboring")
-
-@dp.message_handler(lambda m: "instagram.com" in m.text)
-async def insta_download(message: types.Message):
-    url = message.text
-    ydl_opts = {"outtmpl": "insta.mp4"}
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-
-    video = open("insta.mp4", "rb")
-    await message.answer_video(video)
-
-# YouTube
-@dp.message_handler(lambda m: m.text == "▶️ YouTube")
-async def youtube(message: types.Message):
-    await message.answer("YouTube link yuboring")
-
-@dp.message_handler(lambda m: "youtube.com" in m.text or "youtu.be" in m.text)
-async def yt_download(message: types.Message):
-    url = message.text
-    ydl_opts = {"outtmpl": "youtube.mp4"}
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-
-    video = open("youtube.mp4", "rb")
-    await message.answer_video(video)
-
-# Musiqa
-@dp.message_handler(lambda m: m.text == "🎵 Musiqa")
-async def music(message: types.Message):
-    await message.answer("Musiqa nomini yozing")
-
-@dp.message_handler(lambda m: not m.text.startswith("http"))
-async def search_music(message: types.Message):
-    query = message.text
 
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': 'music.mp3'
+        'outtmpl': 'tiktok.mp4',
+        'format': 'mp4'
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([f"ytsearch:{query}"])
+        ydl.download([url])
 
-    audio = open("music.mp3", "rb")
-    await message.answer_audio(audio)
+    video = open("tiktok.mp4","rb")
+    await message.answer_video(video)
+
+
+# Instagram tugma
+@dp.message_handler(lambda m: m.text == "📥 Instagram")
+async def insta_btn(message: types.Message):
+    await message.answer("Instagram link yuboring")
+
+
+# Instagram yuklash
+@dp.message_handler(lambda m: m.text and "instagram.com" in m.text)
+async def insta_download(message: types.Message):
+
+    url = message.text
+
+    ydl_opts = {
+        'outtmpl': 'insta.mp4'
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    video = open("insta.mp4","rb")
+    await message.answer_video(video)
+
+
+# YouTube tugma
+@dp.message_handler(lambda m: m.text == "▶️ YouTube")
+async def yt_btn(message: types.Message):
+    await message.answer("YouTube link yuboring")
+
+
+# YouTube yuklash
+@dp.message_handler(lambda m: m.text and ("youtube.com" in m.text or "youtu.be" in m.text))
+async def yt_download(message: types.Message):
+
+    url = message.text
+
+    ydl_opts = {
+        'outtmpl': 'youtube.mp4'
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    video = open("youtube.mp4","rb")
+    await message.answer_video(video)
+
+
+# Musiqa tugma
+@dp.message_handler(lambda m: m.text == "🎵 Musiqa")
+async def music_btn(message: types.Message):
+    await message.answer("Musiqa nomini yozing")
+
+
+# Musiqa qidirish
+@dp.message_handler(lambda m: m.text and not m.text.startswith("/"))
+async def music_search(message: types.Message):
+
+    try:
+
+        search = VideosSearch(message.text, limit=1)
+        result = search.result()
+
+        url = result["result"][0]["link"]
+
+        ydl_opts = {
+            'format': 'bestaudio',
+            'outtmpl': 'music.mp3'
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        audio = open("music.mp3","rb")
+        await message.answer_audio(audio)
+
+    except:
+        pass
+
 
 # Kino
 @dp.message_handler(lambda m: m.text == "🎬 Kino")
 async def kino(message: types.Message):
-    await message.answer("Kino nomini yozing")
+    await message.answer("Kino funksiyasi tez orada qo‘shiladi")
+
 
 # Ob-havo
-@dp.message_handler(lambda m: m.text == "🌤 Ob-havo")
+@dp.message_handler(lambda m: m.text == "☀️ Ob-havo")
 async def weather(message: types.Message):
-    await message.answer("Shahar nomini yozing")
 
-executor.start_polling(dp)
+    city = "Tashkent"
+    url = f"https://wttr.in/{city}?format=3"
+
+    r = requests.get(url)
+
+    await message.answer(r.text)
+
+
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
