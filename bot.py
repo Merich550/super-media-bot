@@ -1,3 +1,6 @@
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher import FSMContext
 import os
 import logging
 import yt_dlp
@@ -10,7 +13,8 @@ logging.basicConfig(level=logging.INFO)
 TOKEN = os.getenv("TOKEN")
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
 keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
@@ -100,31 +104,6 @@ async def music_btn(message: types.Message):
     await message.answer("Musiqa nomini yozing")
 
 
-# Musiqa qidirish
-
-@dp.message_handler(lambda m: m.text not in ["📥 TikTok","📥 Instagram","▶️ YouTube","🎵 Musiqa","🎬 Kino","☀️ Ob-havo"] and not "http" in m.text)
-async def music_search(message: types.Message):
-
-    try:
-
-        search = VideosSearch(message.text, limit=1)
-        result = search.result()
-
-        url = result["result"][0]["link"]
-
-        ydl_opts = {
-            'format': 'bestaudio',
-            'outtmpl': 'music.mp3'
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-
-        audio = open("music.mp3","rb")
-        await message.answer_audio(audio)
-
-    except:
-        await message.answer("Musiqa topilmadi")
 
     
 
@@ -155,6 +134,52 @@ async def kino(message: types.Message):
 
 
 # Ob-havo
+
+
+
+   # Musiqa qidirish
+@dp.message_handler(lambda m: m.text and "http" not in m.text and m.text not in ["📥 TikTok","📥 Instagram","▶️ YouTube","🎵 Musiqa","🎬 Kino","☀️ Ob-havo"])
+async def music_search(message: types.Message):
+
+    try:
+        search = VideosSearch(message.text, limit=1)
+        result = search.result()
+
+        url = result["result"][0]["link"]
+
+        ydl_opts = {
+            'format': 'bestaudio',
+            'outtmpl': 'music.mp3'
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        audio = open("music.mp3","rb")
+        await message.answer_audio(audio)
+
+    except:
+        await message.answer("Musiqa topilmadi")
+
+        
+        result = search.result()
+
+        url = result["result"][0]["link"]
+
+        ydl_opts = {
+            'format': 'bestaudio',
+            'outtmpl': 'music.mp3'
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        audio = open("music.mp3","rb")
+        await message.answer_audio(audio)
+
+    except:
+        await message.answer("Musiqa topilmadi")
+  # Ob-havo
 @dp.message_handler(lambda m: m.text == "☀️ Ob-havo")
 async def weather(message: types.Message):
 
