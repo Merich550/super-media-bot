@@ -1,4 +1,3 @@
-import os
 import logging
 import yt_dlp
 import requests
@@ -6,12 +5,11 @@ import requests
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
 from youtubesearchpython import VideosSearch
 
-logging.basicConfig(level=logging.INFO)
-
 TOKEN = "8705691968:AAHuPJ78OrUxz8dQ2LPi6Oge7zVg7YDFTUM"
+
+logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
@@ -20,7 +18,6 @@ dp = Dispatcher(bot, storage=storage)
 search_results = {}
 
 keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
 keyboard.add("📥 TikTok","📥 Instagram")
 keyboard.add("▶️ YouTube","🎵 Musiqa")
 keyboard.add("🎬 Kino","☀️ Ob-havo")
@@ -32,22 +29,45 @@ async def start(message: types.Message):
     text = """
 🤖 Super Media Bot
 
-📥 TikTok yuklash
-📥 Instagram yuklash
+📥 TikTok video yuklash
+📥 Instagram video yuklash
 ▶️ YouTube video yuklash
-🎵 Musiqa qidirish
+🎵 Musiqa topish
+🎬 Kino qidirish
 ☀️ Ob-havo
-
-Link yoki qo'shiq nomini yuboring
 """
 
     await message.answer(text, reply_markup=keyboard)
 
-# TIKTOK
+# TIKTOK TUGMA
+@dp.message_handler(lambda m: m.text == "📥 TikTok")
+async def tiktok_btn(message: types.Message):
+
+    await message.answer("TikTok link yuboring")
+
+# INSTAGRAM TUGMA
+@dp.message_handler(lambda m: m.text == "📥 Instagram")
+async def insta_btn(message: types.Message):
+
+    await message.answer("Instagram link yuboring")
+
+# YOUTUBE TUGMA
+@dp.message_handler(lambda m: m.text == "▶️ YouTube")
+async def yt_btn(message: types.Message):
+
+    await message.answer("YouTube link yuboring")
+
+# MUSIQA TUGMA
+@dp.message_handler(lambda m: m.text == "🎵 Musiqa")
+async def music_btn(message: types.Message):
+
+    await message.answer("Musiqa nomini yozing")
+
+# TIKTOK DOWNLOAD
 @dp.message_handler(lambda m: m.text and "tiktok.com" in m.text)
 async def tiktok_download(message: types.Message):
 
-    url = message.text
+    url = message.text.strip()
 
     ydl_opts = {
         'outtmpl': 'tiktok.mp4',
@@ -60,11 +80,11 @@ async def tiktok_download(message: types.Message):
     video = open("tiktok.mp4","rb")
     await message.answer_video(video)
 
-# INSTAGRAM
+# INSTAGRAM DOWNLOAD
 @dp.message_handler(lambda m: m.text and "instagram.com" in m.text)
 async def insta_download(message: types.Message):
 
-    url = message.text
+    url = message.text.strip()
 
     ydl_opts = {
         'outtmpl': 'insta.mp4'
@@ -76,11 +96,11 @@ async def insta_download(message: types.Message):
     video = open("insta.mp4","rb")
     await message.answer_video(video)
 
-# YOUTUBE
-@dp.message_handler(lambda m: m.text and "youtube.com" in m.text or "youtu.be" in m.text)
-async def youtube_download(message: types.Message):
+# YOUTUBE DOWNLOAD
+@dp.message_handler(lambda m: m.text and ("youtube.com" in m.text or "youtu.be" in m.text))
+async def yt_download(message: types.Message):
 
-    url = message.text
+    url = message.text.strip()
 
     ydl_opts = {
         'outtmpl': 'youtube.mp4'
@@ -92,14 +112,10 @@ async def youtube_download(message: types.Message):
     video = open("youtube.mp4","rb")
     await message.answer_video(video)
 
-# MUSIQA TUGMA
-@dp.message_handler(lambda m: m.text == "🎵 Musiqa")
-async def music_btn(message: types.Message):
-
-    await message.answer("🎵 Musiqa nomini yozing")
-
 # MUSIQA QIDIRISH
-@dp.message_handler(lambda m: m.text and "http" not in m.text)
+@dp.message_handler(lambda m: m.text 
+and "http" not in m.text
+and m.text not in ["📥 TikTok","📥 Instagram","▶️ YouTube","🎵 Musiqa","🎬 Kino","☀️ Ob-havo"])
 async def music_search(message: types.Message):
 
     search = VideosSearch(message.text, limit=10)
@@ -156,13 +172,14 @@ async def send_music(call: types.CallbackQuery):
 @dp.message_handler(lambda m: m.text == "🎬 Kino")
 async def kino(message: types.Message):
 
-    await message.answer("🎬 Kino funksiyasi tez orada qo‘shiladi")
+    await message.answer("Kino qidirish funksiyasi tez orada qo‘shiladi")
 
-# OB-HAVO
+# OB HAVO
 @dp.message_handler(lambda m: m.text == "☀️ Ob-havo")
 async def weather(message: types.Message):
 
     city = "Tashkent"
+
     url = f"https://wttr.in/{city}?format=3"
 
     r = requests.get(url)
