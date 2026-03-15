@@ -1,4 +1,1 @@
-aiogram==2.25.1
-yt-dlp
-youtube-search-python
-requests
+
